@@ -4,14 +4,6 @@ var plugins = require('gulp-load-plugins')();
 var es      = require('event-stream');
 var del     = require('del');
 
-var handlebarOpts = {
-  helpers: {
-        assetPath: function (path, context) {
-            return context.data.root[path];
-        }
-    }
-};
-
 var publicFolderPath = '../public';
 
 var paths = {
@@ -20,7 +12,7 @@ var paths = {
   appMainSass:       'app/scss/main.scss',
   appStyles:         'app/scss/**/*.scss',
   appImages:         'app/images/**/*',
-  indexHbs:          'app/index.hbs',
+  indexHtml:         'app/index.html',
   vendorJavascript:  ['vendor/js/angular.js', 'vendor/js/**/*.js'],
   vendorCss:         ['vendor/css/**/*.css'],
   finalAppJsPath:    '/js/app.js',
@@ -80,13 +72,13 @@ gulp.task('images', function() {
 });
 
 gulp.task('indexHtml-dev', ['scripts-dev', 'styles-dev'], function() {
-  var manifest = {};
+  var manifest = {
+    js: paths.finalAppJsPath,
+    css: paths.finalAppCssPath
+  };
 
-  manifest[paths.finalAppJsPath]  = paths.finalAppJsPath;
-  manifest[paths.finalAppCssPath] = paths.finalAppCssPath;
-
-  return gulp.src(paths.indexHbs)
-    .pipe(plugins.compileHandlebars(manifest, handlebarOpts))
+  return gulp.src(paths.indexHtml)
+    .pipe(plugins.template({css: manifest['css'], js: manifest['js']}))
     .pipe(plugins.rename('index.html'))
     .pipe(gulp.dest(paths.publicFolder));
 });
@@ -95,13 +87,13 @@ gulp.task('indexHtml-prod', ['scripts-prod', 'styles-prod'], function() {
   var jsManifest  = JSON.parse(fs.readFileSync(paths.publicJsManifest, 'utf8'));
   var cssManifest = JSON.parse(fs.readFileSync(paths.publicCssManifest, 'utf8'));
 
-  var manifest = {};
+  var manifest = {
+    js: jsManifest['app.js'],
+    css: cssManifest['app.css']
+  };
 
-  manifest[paths.finalAppJsPath]  = jsManifest['app.js'];
-  manifest[paths.finalAppCssPath] = cssManifest['app.css'];
-
-  return gulp.src(paths.indexHbs)
-    .pipe(plugins.compileHandlebars(manifest, handlebarOpts))
+  return gulp.src(paths.indexHtml)
+    .pipe(plugins.template({css: manifest['css'], js: manifest['js']}))
     .pipe(plugins.rename('index.html'))
     .pipe(gulp.dest(paths.publicFolder));
 });
