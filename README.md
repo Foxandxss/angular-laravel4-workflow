@@ -2,7 +2,7 @@
 
 This is a customization of my generic [workflow](https://github.com/Foxandxss/fox-angular-gulp-workflow) to be used inside a Laravel4 application.
 
-For a complete tutorial, follow my blog post (SOON).
+For a complete tutorial, follow my [blog post](http://angular-tips.com/blog/2014/10/working-with-a-laravel-4-plus-angular-application/)
 
 ## Creating the project
 
