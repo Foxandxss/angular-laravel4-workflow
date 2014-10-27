@@ -1,8 +1,8 @@
-var gulp               = require('gulp');
-var fs                 = require('fs');
-var plugins            = require('gulp-load-plugins')();
-var es                 = require('event-stream');
-var historyApiFallback = require('connect-history-api-fallback');
+var gulp    = require('gulp');
+var fs      = require('fs');
+var plugins = require('gulp-load-plugins')();
+var es      = require('event-stream');
+var del     = require('del');
 
 var handlebarOpts = {
   helpers: {
@@ -13,28 +13,25 @@ var handlebarOpts = {
 };
 
 var paths = {
-  appJavascript:    ['app/js/app.js', 'app/js/**/*.js'],
-  appTemplates:     'app/js/**/*.tpl.html',
-  appMainSass:      'app/scss/main.scss',
-  appStyles:        'app/scss/**/*.scss',
-  appImages:        'app/images/**/*',
-  indexHbs:         'app/index.hbs',
-  vendorJavascript: ['vendor/js/angular.js', 'vendor/js/**/*.js'],
-  vendorCss:        ['vendor/css/**/*.css'],
-  finalAppJsPath:   '/js/app.js',
-  finalAppCssPath:  '/css/app.css',
-  specFolder:       ['spec/**/*_spec.js'],
-  tmpFolder:        'tmp',
-  tmpJavascript:    'tmp/js',
-  tmpAppJs:         'tmp/js/app.js',
-  tmpCss:           'tmp/css',
-  tmpImages:        'tmp/images',
-  distFolder:       'dist',
-  distJavascript:   'dist/js',
-  distCss:          'dist/css',
-  distImages:       'dist/images',
-  distJsManifest:   'dist/js/rev-manifest.json',
-  distCssManifest:  'dist/css/rev-manifest.json'
+  appJavascript:     ['app/js/app.js', 'app/js/**/*.js'],
+  appTemplates:      'app/js/**/*.tpl.html',
+  appMainSass:       'app/scss/main.scss',
+  appStyles:         'app/scss/**/*.scss',
+  appImages:         'app/images/**/*',
+  indexHbs:          'app/index.hbs',
+  vendorJavascript:  ['vendor/js/angular.js', 'vendor/js/**/*.js'],
+  vendorCss:         ['vendor/css/**/*.css'],
+  finalAppJsPath:    '/js/app.js',
+  finalAppCssPath:   '/css/app.css',
+  specFolder:        ['spec/**/*_spec.js'],
+  publicFolder:      '../public',
+  publicJavascript:  '../public/js',
+  publicAppJs:       '../public/js/app.js',
+  publicCss:         '../public/css',
+  publicImages:      '../public/images',
+  publicIndex:       '../public/index.html',
+  publicJsManifest:  '../public/js/rev-manifest.json',
+  publicCssManifest: '../public/css/rev-manifest.json'
 };
 
 gulp.task('scripts-dev', function() {
@@ -43,8 +40,7 @@ gulp.task('scripts-dev', function() {
     .pipe(plugins.sourcemaps.init())
     .pipe(plugins.concat('app.js'))
     .pipe(plugins.sourcemaps.write('.'))
-    .pipe(gulp.dest(paths.tmpJavascript))
-    .pipe(plugins.connect.reload());
+    .pipe(gulp.dest(paths.publicJavascript));
 });
 gulp.task('scripts-prod', function() {
   return gulp.src(paths.vendorJavascript.concat(paths.appJavascript, paths.appTemplates))
@@ -53,17 +49,16 @@ gulp.task('scripts-prod', function() {
     .pipe(plugins.ngAnnotate())
     .pipe(plugins.uglify())
     .pipe(plugins.rev())
-    .pipe(gulp.dest(paths.distJavascript))
+    .pipe(gulp.dest(paths.publicJavascript))
     .pipe(plugins.rev.manifest({path: 'rev-manifest.json'}))
-    .pipe(gulp.dest(paths.distJavascript));
+    .pipe(gulp.dest(paths.publicJavascript));
 });
 
 gulp.task('styles-dev', function() {
   return gulp.src(paths.vendorCss.concat(paths.appMainSass))
     .pipe(plugins.if(/scss$/, plugins.sass()))
     .pipe(plugins.concat('app.css'))
-    .pipe(gulp.dest(paths.tmpCss))
-    .pipe(plugins.connect.reload());
+    .pipe(gulp.dest(paths.publicCss));
 });
 
 gulp.task('styles-prod', function() {
@@ -72,20 +67,14 @@ gulp.task('styles-prod', function() {
     .pipe(plugins.concat('app.css'))
     .pipe(plugins.minifyCss())
     .pipe(plugins.rev())
-    .pipe(gulp.dest(paths.distCss))
+    .pipe(gulp.dest(paths.publicCss))
     .pipe(plugins.rev.manifest({path: 'rev-manifest.json'}))
-    .pipe(gulp.dest(paths.distCss));
+    .pipe(gulp.dest(paths.publicCss));
 });
 
-gulp.task('images-dev', function() {
+gulp.task('images', function() {
   return gulp.src(paths.appImages)
-    .pipe(gulp.dest(paths.tmpImages))
-    .pipe(plugins.connect.reload());
-});
-
-gulp.task('images-prod', function() {
-  return gulp.src(paths.appImages)
-    .pipe(gulp.dest(paths.distImages));
+    .pipe(gulp.dest(paths.publicImages));
 });
 
 gulp.task('indexHtml-dev', ['scripts-dev', 'styles-dev'], function() {
@@ -97,13 +86,12 @@ gulp.task('indexHtml-dev', ['scripts-dev', 'styles-dev'], function() {
   return gulp.src(paths.indexHbs)
     .pipe(plugins.compileHandlebars(manifest, handlebarOpts))
     .pipe(plugins.rename('index.html'))
-    .pipe(gulp.dest(paths.tmpFolder))
-    .pipe(plugins.connect.reload());
+    .pipe(gulp.dest(paths.publicFolder));
 });
 
 gulp.task('indexHtml-prod', ['scripts-prod', 'styles-prod'], function() {
-  var jsManifest  = JSON.parse(fs.readFileSync(paths.distJsManifest, 'utf8'));
-  var cssManifest = JSON.parse(fs.readFileSync(paths.distCssManifest, 'utf8'));
+  var jsManifest  = JSON.parse(fs.readFileSync(paths.publicJsManifest, 'utf8'));
+  var cssManifest = JSON.parse(fs.readFileSync(paths.publicCssManifest, 'utf8'));
 
   var manifest = {};
 
@@ -113,7 +101,7 @@ gulp.task('indexHtml-prod', ['scripts-prod', 'styles-prod'], function() {
   return gulp.src(paths.indexHbs)
     .pipe(plugins.compileHandlebars(manifest, handlebarOpts))
     .pipe(plugins.rename('index.html'))
-    .pipe(gulp.dest(paths.distFolder));
+    .pipe(gulp.dest(paths.publicFolder));
 });
 
 gulp.task('lint', function() {
@@ -129,12 +117,11 @@ gulp.task('testem', function() {
     }));
 });
 
-gulp.task('clean', function() {
-  return gulp.src([paths.tmpFolder, paths.distFolder], {read: false})
-    .pipe(plugins.rimraf());
+gulp.task('clean', function(cb) {
+  del([paths.publicJavascript, paths.publicImages, paths.publicCss, paths.publicIndex], {force: true}, cb);
 });
 
-gulp.task('watch', ['webserver'], function() {
+gulp.task('watch', ['indexHtml-dev', 'images'], function() {
   gulp.watch(paths.appJavascript, ['lint', 'scripts']);
   gulp.watch(paths.appTemplates, ['scripts']);
   gulp.watch(paths.vendorJavascript, ['scripts']);
@@ -145,25 +132,8 @@ gulp.task('watch', ['webserver'], function() {
   gulp.watch(paths.vendorCss, ['styles']);
 });
 
-gulp.task('webserver', ['indexHtml-dev', 'images-dev'], function() {
-  plugins.connect.server({
-    root: paths.tmpFolder,
-    port: 5000,
-    livereload: true,
-    middleware: function(connect, o) {
-        return [ (function() {
-            var url = require('url');
-            var proxy = require('proxy-middleware');
-            var options = url.parse('http://localhost:8080/api');
-            options.route = '/api';
-            return proxy(options);
-        })(), historyApiFallback ];
-    }
-  });
-});
-
 gulp.task('default', ['watch']);
-gulp.task('production', ['scripts-prod', 'styles-prod', 'images-prod', 'indexHtml-prod']);
+gulp.task('production', ['scripts-prod', 'styles-prod', 'images', 'indexHtml-prod']);
 
 function buildTemplates() {
   return es.pipeline(
