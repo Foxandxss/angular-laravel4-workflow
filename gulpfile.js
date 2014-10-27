@@ -23,7 +23,7 @@ var paths = {
   publicAppJs:       publicFolderPath + '/js/app.js',
   publicCss:         publicFolderPath + '/css',
   publicImages:      publicFolderPath + '/images',
-  publicIndex:       publicFolderPath + '/index.html',
+  publicIndex:       publicFolderPath + '/angular.html',
   publicJsManifest:  publicFolderPath + '/js/rev-manifest.json',
   publicCssManifest: publicFolderPath + '/css/rev-manifest.json'
 };
@@ -79,7 +79,7 @@ gulp.task('indexHtml-dev', ['scripts-dev', 'styles-dev'], function() {
 
   return gulp.src(paths.indexHtml)
     .pipe(plugins.template({css: manifest['css'], js: manifest['js']}))
-    .pipe(plugins.rename('index.html'))
+    .pipe(plugins.rename(paths.publicIndex))
     .pipe(gulp.dest(paths.publicFolder));
 });
 
@@ -94,7 +94,7 @@ gulp.task('indexHtml-prod', ['scripts-prod', 'styles-prod'], function() {
 
   return gulp.src(paths.indexHtml)
     .pipe(plugins.template({css: manifest['css'], js: manifest['js']}))
-    .pipe(plugins.rename('index.html'))
+    .pipe(plugins.rename(paths.publicIndex))
     .pipe(gulp.dest(paths.publicFolder));
 });
 
@@ -116,14 +116,14 @@ gulp.task('clean', function(cb) {
 });
 
 gulp.task('watch', ['indexHtml-dev', 'images'], function() {
-  gulp.watch(paths.appJavascript, ['lint', 'scripts']);
-  gulp.watch(paths.appTemplates, ['scripts']);
-  gulp.watch(paths.vendorJavascript, ['scripts']);
-  gulp.watch(paths.appImages, ['images']);
+  gulp.watch(paths.appJavascript, ['lint', 'scripts-dev']);
+  gulp.watch(paths.appTemplates, ['scripts-dev']);
+  gulp.watch(paths.vendorJavascript, ['scripts-dev']);
+  gulp.watch(paths.appImages, ['images-dev']);
   gulp.watch(paths.specFolder, ['lint']);
-  gulp.watch(paths.indexHtml, ['indexHtml']);
-  gulp.watch(paths.appStyles, ['styles']);
-  gulp.watch(paths.vendorCss, ['styles']);
+  gulp.watch(paths.indexHtml, ['indexHtml-dev']);
+  gulp.watch(paths.appStyles, ['styles-dev']);
+  gulp.watch(paths.vendorCss, ['styles-dev']);
 });
 
 gulp.task('default', ['watch']);
