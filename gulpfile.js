@@ -12,6 +12,8 @@ var handlebarOpts = {
     }
 };
 
+var publicFolderPath = '../public';
+
 var paths = {
   appJavascript:     ['app/js/app.js', 'app/js/**/*.js'],
   appTemplates:      'app/js/**/*.tpl.html',
@@ -24,14 +26,14 @@ var paths = {
   finalAppJsPath:    '/js/app.js',
   finalAppCssPath:   '/css/app.css',
   specFolder:        ['spec/**/*_spec.js'],
-  publicFolder:      '../public',
-  publicJavascript:  '../public/js',
-  publicAppJs:       '../public/js/app.js',
-  publicCss:         '../public/css',
-  publicImages:      '../public/images',
-  publicIndex:       '../public/index.html',
-  publicJsManifest:  '../public/js/rev-manifest.json',
-  publicCssManifest: '../public/css/rev-manifest.json'
+  publicFolder:      publicFolderPath,
+  publicJavascript:  publicFolderPath + '/js',
+  publicAppJs:       publicFolderPath + '/js/app.js',
+  publicCss:         publicFolderPath + '/css',
+  publicImages:      publicFolderPath + '/images',
+  publicIndex:       publicFolderPath + '/index.html',
+  publicJsManifest:  publicFolderPath + '/js/rev-manifest.json',
+  publicCssManifest: publicFolderPath + '/css/rev-manifest.json'
 };
 
 gulp.task('scripts-dev', function() {
